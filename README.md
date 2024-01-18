@@ -1,24 +1,12 @@
-# X Docker
+# Ansible AWX
 
-Docker container for X
-
-## Setup
-
-
-Build the image
-```
-docker build -t x-image .
-```
+Docker Compose for Ansible AWX
 
 ## Running
 ```
 # docker compose (preferred)
 
-docker compose up -d --build
-
-# docker
-
-docker run ...
+docker compose up -d
 ```
 
 ## Docs
