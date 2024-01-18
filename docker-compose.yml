@@ -1,13 +1,59 @@
-version: "3.9"
+version: '3'
 
 services:
-  x-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: x-image
-    container_name: x-service
-    ports:
-      - 25:25
+  postgres:
+    image: postgres:9.6
     environment:
-      KEY: var
+      POSTGRES_DB: awx
+      POSTGRES_USER: awx
+      POSTGRES_PASSWORD: awxpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  memcached:
+    image: memcached:alpine
+
+  rabbitmq:
+    image: rabbitmq:3
+    environment:
+      RABBITMQ_DEFAULT_USER: awx
+      RABBITMQ_DEFAULT_PASS: awxpass
+
+  awx_web:
+    image: ansible/awx_web:latest
+    depends_on:
+      - postgres
+      - memcached
+      - rabbitmq
+    ports:
+      - "8080:8052"
+    environment:
+      SECRET_KEY: "mysecretkey"
+      AWX_ADMIN_USER: admin
+      AWX_ADMIN_PASSWORD: password
+      AWX_API_URL: "http://awx_web:8052"
+      AWX_TASK_ENV: "default"
+      POSTGRES_DB: awx
+      POSTGRES_USER: awx
+      POSTGRES_PASSWORD: awxpass
+      AWX_PROJECTS_ROOT: "/var/lib/awx/projects"
+      AWX_ISOLATED_DATA_VOLUME: "/var/lib/awx/awxcompose"
+
+  awx_task:
+    image: ansible/awx_task:latest
+    depends_on:
+      - awx_web
+    environment:
+      SECRET_KEY: "mysecretkey"
+      AWX_ADMIN_USER: admin
+      AWX_ADMIN_PASSWORD: password
+      AWX_API_URL: "http://awx_web:8052"
+      AWX_TASK_ENV: "default"
+      POSTGRES_DB: awx
+      POSTGRES_USER: awx
+      POSTGRES_PASSWORD: awxpass
+      AWX_PROJECTS_ROOT: "/var/lib/awx/projects"
+      AWX_ISOLATED_DATA_VOLUME: "/var/lib/awx/awxcompose"
+
+volumes:
+  postgres_data:
